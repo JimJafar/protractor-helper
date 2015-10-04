@@ -7,4 +7,4 @@ Also, people had to keep solving challenges and overcoming Protractor / Selenium
 
 So, I wrote a helper file that enormously reduces the amount of code we have to (re)write and that provides a central place for us to put reusable workarounds.
 
-You can see in more detail why I created this helper and how it can be used in [this blog post](http://www.competa.com/blog/?p=841).
+You can see in more detail why I created this helper and how it can be used in [this blog post](http://www.competa.com/blog/2015/10/a-pageobject-helper-for-protractor-tests/).
