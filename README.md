@@ -1,7 +1,7 @@
 # protractor-helper
 **A helper that generates convenience methods for your e2e Protractor tests**
 
-On my current project we use PageObjects to keep our Protractor tests clean and DRY, but I found that there was a lot of duplication and tedious boilerplate code between our different PageObjects.
+On my current project we use [PageObjects](https://code.google.com/p/selenium/wiki/PageObjects) to keep our Protractor tests clean and DRY, but I found that there was a lot of duplication and tedious boilerplate code between our different PageObjects.
 
 Also, people had to keep solving challenges and overcoming Protractor / Selenium peculiarities that had been dealt with before by another developer.
 
