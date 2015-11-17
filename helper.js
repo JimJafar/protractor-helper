@@ -123,7 +123,12 @@ module.exports = function () {
          * @returns {Promise}
          */
         page.click = function(element) {
-            return browser.actions().click(element).perform();
+            return page.executeSequence([
+                // clear focus first to avoid a rare condition where the click only clears
+                // focus from another element instead of actually clicking the thing you want
+                page.clearFocus(),
+                browser.actions().click(element).perform()
+            ]);
         };
 
         /**
