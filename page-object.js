@@ -21,8 +21,6 @@ module.exports = function (baseUrl, elements) {
     'use strict';
     var flow = browser.controlFlow();
     var page = this;
-    //var elem;
-    //elements = elements || page.elements;
 
     page.baseUrl = baseUrl;
     page.elements = elements;
@@ -84,7 +82,7 @@ module.exports = function (baseUrl, elements) {
      */
     page.pageIsOpen = function () {
         browser.waitForAngular();
-        return element(by.id('mn')).isPresent();
+        return element(by.id('some-element-in-a-template-that-is-always-there')).isPresent();
     };
 
     /* * * * * * * * * * * * * * *
@@ -229,7 +227,7 @@ module.exports = function (baseUrl, elements) {
      */
     page.waitUntilModalIsGone = function() {
         var ec = protractor.ExpectedConditions;
-        var modal = element(by.css('.comp-overlay-message'));
+        var modal = element(by.css('.my-modal-class'));
         return browser.driver.wait(ec.not(ec.presenceOf(modal)), 1000);
     };
 
