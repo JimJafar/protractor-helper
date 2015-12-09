@@ -5,8 +5,6 @@ module.exports = function () {
      * Generates convenience methods for your e2e tests
      *
      * @param page Your page object
-     * @param elements A collection of elements like this: { myButton: element(by.id('myBtn')), ...}
-     *                 This parameter is optional and is kept to support old code.
      *
      * @example
      * var Helper = require('../../../support/helper');
@@ -26,12 +24,14 @@ module.exports = function () {
      */
     this.generatePageMethods = function(page, elements) {
         var flow = browser.controlFlow();
-        var elem;
-        elements = elements || page.elements;
+
+        /* * * * * * * * * * * * *
+         * PROMISE / FLOW METHODS
+         * * * * * * * * * * * * */
 
         /**
          * Execute a sequence of promises sequentially
-         * @param {array} actionPromises
+         * @param {*[]} actionPromises
          * @returns {Promise}
          */
         page.executeSequence = function(actionPromises) {
@@ -42,6 +42,18 @@ module.exports = function () {
             );
         };
 
+        /* * * * * * * * * * * * *
+         * PAGE RELATED METHODS
+         * * * * * * * * * * * * */
+
+        /**
+         * Opens the page.baseUrl
+         * @returns {Promise}
+         */
+        page.get = function() {
+            return page.getUrl('');
+        };
+
         /**
          * Opens the page.baseUrl appending the suffix parameter
          * @param {string} suffix
@@ -49,18 +61,19 @@ module.exports = function () {
          */
         page.getUrl = function(suffix) {
             browser.ignoreSynchronisation = false;
-            return browser.get(page.baseUrl + suffix)
-                .then(page.pageIsOpen);
+            return page.executeSequence([
+                browser.get(page.baseUrl + suffix),
+                page.pageIsOpen()
+            ]);
         };
 
         /**
-         * Opens the page.baseUrl
+         * Scroll to an element
+         * @param {WebElement} element
          * @returns {Promise}
          */
-        page.get = function() {
-            browser.ignoreSynchronisation = false;
-            return browser.get(page.baseUrl)
-                .then(page.pageIsOpen);
+        page.scrollTo = function(element) {
+            return browser.executeScript('arguments[0].scrollIntoView()', element.getWebElement());
         };
 
         /**
@@ -69,7 +82,34 @@ module.exports = function () {
          */
         page.pageIsOpen = function () {
             browser.waitForAngular();
-            return element(by.tagName('body')).isPresent();
+            return element(by.id('mn')).isPresent();
+        };
+
+        /* * * * * * * * * * * * * * *
+         * ELEMENT INTERACTION METHODS
+         * * * * * * * * * * * * * * */
+
+        /**
+         * Click an element (uses browser.actions to avoid an IE bug)
+         * @param {WebElement} element
+         * @returns {Promise}
+         */
+        page.click = function(element) {
+            return page.executeSequence([
+                // clear focus first to avoid a rare condition where the click only clears
+                // focus from another element instead of actually clicking the thing you want
+                page.clearFocus(),
+                browser.actions().click(element).perform()
+            ]);
+        };
+
+        /**
+         * Give focus to an element (just a descriptive alias for a click)
+         * @param {WebElement} element
+         * @returns {Promise}
+         */
+        page.focus = function(element) {
+            return page.click(element);
         };
 
         /**
@@ -77,7 +117,16 @@ module.exports = function () {
          * @returns {Promise}
          */
         page.clearFocus = function () {
-            return page.click(element(by.tagName('body')))();
+            return browser.actions().mouseMove({x: 9999, y: 9999}).click().perform();
+        };
+
+        /**
+         * Hover on an element
+         * @param {WebElement} element
+         * @returns {Promise}
+         */
+        page.hover = function(element) {
+            return browser.actions().mouseMove(element).perform();
         };
 
         /**
@@ -118,47 +167,6 @@ module.exports = function () {
         };
 
         /**
-         * Click an element (uses browser.actions to avoid an IE bug)
-         * @param {WebElement} element
-         * @returns {Promise}
-         */
-        page.click = function(element) {
-            return page.executeSequence([
-                // clear focus first to avoid a rare condition where the click only clears
-                // focus from another element instead of actually clicking the thing you want
-                page.clearFocus(),
-                browser.actions().click(element).perform()
-            ]);
-        };
-
-        /**
-         * Hover on an element
-         * @param {WebElement} element
-         * @returns {Promise}
-         */
-        page.hover = function(element) {
-            return browser.actions().mouseMove(element).perform();
-        };
-
-        /**
-         * Scroll to an element
-         * @param {WebElement} element
-         * @returns {Promise}
-         */
-        page.scrollTo = function(element) {
-            return browser.executeScript('arguments[0].scrollIntoView()', element.getWebElement());
-        };
-
-        /**
-         * Give focus to an element (alias click)
-         * @param {WebElement} element
-         * @returns {Promise}
-         */
-        page.focus = function(element) {
-            return page.click(element);
-        };
-
-        /**
          * Check to see if an element has a class assigned
          * @param {WebElement} element
          * @param {string} className
@@ -168,6 +176,68 @@ module.exports = function () {
             return element.getAttribute('class').then(function (classes) {
                 return !!classes && classes.split(' ').indexOf(className) !== -1;
             });
+        };
+
+        /**
+         * Selects an item in dropdown by index
+         * @param {WebElement} dropdown
+         * @param {number} index
+         */
+        page.selectDropdownItemByIndex = function(dropdown, index) {
+            return page.executeSequence([
+                page.click(dropdown),
+                dropdown.all(by.tagName('option')).get(index).click(),
+                page.clearFocus()
+            ]);
+        };
+
+        /**
+         * Selects an item in dropdown by label
+         * @param {WebElement} dropdown
+         * @param {string} label
+         */
+        page.selectDropdownItemByLabel = function(dropdown, label) {
+            return page.executeSequence([
+                page.click(dropdown),
+                dropdown.all(by.css('option[label="' + label + '"]')).first().click(),
+                page.clearFocus()
+            ]);
+        };
+
+        /**
+         * Selects an item in dropdown by value
+         * @param {WebElement} dropdown
+         * @param {string} value
+         */
+        page.selectDropdownItemByValue = function(dropdown, value) {
+            return page.executeSequence([
+                page.click(dropdown),
+                dropdown.all(by.css('option[value="' + value + '"]')).first().click(),
+                page.clearFocus()
+            ]);
+        };
+
+        /* * * * * * * * * * * * * * *
+         * WAITING FOR THINGS
+         * * * * * * * * * * * * * * */
+
+        /**
+         * Waits until there is no modal present
+         * @returns {Promise}
+         */
+        page.waitUntilModalIsGone = function() {
+            var ec = protractor.ExpectedConditions;
+            var modal = element(by.css('.comp-overlay-message'));
+            return browser.driver.wait(ec.not(ec.presenceOf(modal)), 1000);
+        };
+
+        /**
+         * Waits until a particular element is present on the page
+         * @returns {Promise}
+         */
+        page.waitForElement = function(element) {
+            var ec = protractor.ExpectedConditions;
+            return browser.driver.wait(ec.presenceOf(element), 1000);
         };
     };
 };
