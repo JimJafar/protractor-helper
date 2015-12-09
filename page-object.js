@@ -1,5 +1,5 @@
 /**
- * Generates convenience methods for your e2e tests
+ * Provides convenience methods for your e2e tests
  *
  * @param {string}  baseUrl     The base path to be used by page.get and page.getUrl
  * @param {*[]}     elements    A collection of elements like this: { myButton: element(by.id('myBtn')), ...}
