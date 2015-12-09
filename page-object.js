@@ -228,7 +228,7 @@ module.exports = function (baseUrl, elements) {
     page.waitUntilModalIsGone = function() {
         var ec = protractor.ExpectedConditions;
         var modal = element(by.css('.my-modal-class'));
-        return browser.driver.wait(ec.not(ec.presenceOf(modal)), 1000);
+        return browser.driver.wait(ec.not(ec.visibilityOf(modal)), 1000);
     };
 
     /**
